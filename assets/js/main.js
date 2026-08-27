@@ -16,7 +16,7 @@
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* Scroll range over which the lid swings open. Shared so the "Open the box"
-     sequence and apply() can never drift out of sync. */
+     sequence and apply() can never drift out of syncc. */
   const LID_P0 = 0.02, LID_P1 = 0.55;
 
   /* ---------------------------------------------------------------
