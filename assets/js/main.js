@@ -17,7 +17,7 @@
 
   /* Scroll range over which the lid swings open. Shared so the "Open the box"
      sequence and apply() can never drift out of sync. */
-  const LID_P0 = 0.03, LID_P1 = 0.30;
+  const LID_P0 = 0.02, LID_P1 = 0.55;
 
   /* ---------------------------------------------------------------
      Header state
@@ -297,8 +297,14 @@
   }
 
   function apply(p) {
-    const lift  = ease(seg(p, LID_P0, LID_P1));            // lid swings up and out
-    const fly   = ease(seg(p, 0.32, 0.86));                // camera pushes in
+    /* Lid and camera run CONCURRENTLY and LINEARLY in scroll progress. They
+       used to be sequential (lid 0.03-0.30, camera from 0.32) with an in-out
+       ease on the lid; after "Open the box" that meant 1.6s of a small distant
+       lid tilting while the camera sat still - which read as nothing happening.
+       Now the camera starts pushing in almost as soon as the lid starts moving,
+       and linear mapping keeps the pace consistent instead of flat-then-snap. */
+    const lift  = seg(p, LID_P0, LID_P1);                  // lid swings up and out
+    const fly   = seg(p, 0.08, 0.86);                      // camera pushes in
     const drift = ease(seg(p, 0.40, 0.86));                // slide left for the card
 
     root.style.setProperty('--p', p.toFixed(4));
@@ -322,10 +328,12 @@
     lidEl.classList.toggle('is-flipped', tiltDeg + openDeg > 90);
     root.style.setProperty('--spin', lerp(-16, 0, fly).toFixed(2) + 'deg');
     root.style.setProperty('--shift', (small ? 0 : lerp(110, -135, drift)).toFixed(1) + 'px');
-    root.style.setProperty('--wallfade', lerp(1, 0.18, seg(p, 0.46, 0.8)).toFixed(3));
+    // Fades begin only after the lid finishes its swing at p=0.55 - fading a
+    // lid that is still opening undercuts the reveal.
+    root.style.setProperty('--wallfade', lerp(1, 0.18, seg(p, 0.58, 0.85)).toFixed(3));
     // The lid never vanishes -- it settles to a faint presence above the tray
     // rather than going to zero. ~25% of it is still in frame at full zoom.
-    root.style.setProperty('--lidfade', lerp(1, 0.18, seg(p, 0.42, 0.62)).toFixed(3));
+    root.style.setProperty('--lidfade', lerp(1, 0.18, seg(p, 0.56, 0.78)).toFixed(3));
     // Headline clears out before the lid sweeps up through it.
     root.style.setProperty('--copyfade', (1 - ease(seg(p, 0.02, 0.20))).toFixed(3));
 
@@ -376,62 +384,36 @@
   /* Safari changes innerHeight as the URL bar collapses; re-measure then too. */
   if (window.visualViewport) visualViewport.addEventListener('resize', () => { measureStack(); onScroll(); });
 
-  /* "Open the box" is a two-beat reveal: the lid swings open slowly enough to
-     watch, then the camera pushes into the tray. Both beats are driven by hand
-     because scrollTo({behavior:'smooth'}) has no duration control. A token
-     cancels a stale run if the button is clicked again mid-animation. */
-  const OPEN_MS = 1600;   // the lid swinging open - the part worth watching
-  const ZOOM_MS = 850;    // camera pushing into the tray afterwards
-  const END_P   = 0.80;
+  /* "Open the box": one continuous motion at constant rate. The lid opens and
+     the camera pushes in together (the phases overlap in apply() now), so there
+     is visible motion from the very first frame - no beat where only a small
+     distant lid moves. Progress is applied DIRECTLY each frame rather than left
+     to the scroll listeners, whose smoothing lerp would add its own lag on top. */
+  const SEQ_MS = 2200;    // full reveal from a standing start
+  const END_P  = 0.80;
   let scrollAnimToken = 0;
-
-  /* apply() runs the lid angle through ease(), which is nearly flat at both
-     ends - 20% into its range the lid has opened barely 3 of its 104 degrees,
-     then it snaps. Driving scroll position evenly therefore does NOT open the
-     lid evenly. This inverts that curve: given how far open we want the lid,
-     it finds the scroll progress that produces it, so the sequence below can
-     put the LID on a chosen curve instead of the scrollbar. */
-  function pForLift(liftTarget) {
-    let lo = LID_P0, hi = LID_P1;
-    for (let i = 0; i < 32; i++) {
-      const mid = (lo + hi) / 2;
-      if (ease(seg(mid, LID_P0, LID_P1)) < liftTarget) lo = mid; else hi = mid;
-    }
-    return (lo + hi) / 2;
-  }
 
   function openBoxSequence() {
     const myToken = ++scrollAnimToken;
     const total = heroTrack.offsetHeight - stage.offsetHeight;
     const trackTop = docTop(heroTrack) - topbarH();
+    const p0 = Math.min(readProgress(), END_P);
+    /* Same rate regardless of starting point: a click halfway down the hero
+       covers half the distance in half the time, not the same time. */
+    const duration = Math.max(1, SEQ_MS * (END_P - p0) / END_P);
     const startTime = performance.now();
 
-    /* Resume from wherever the lid already is, so a click part-way through the
-       hero never snaps the lid shut before reopening it. */
-    const nowP = readProgress();
-    const fromLift = ease(seg(nowP, LID_P0, LID_P1));
-    const t0 = 1 - Math.cbrt(1 - Math.min(fromLift, 1));
-    const zoomFrom = Math.max(LID_P1, nowP);
-
-    /* Ease-OUT, not in-out, so the lid is already moving on the first frame -
-       no ramp-in, no felt delay. The exponent is deliberately low (1.6, not a
-       cubic 3): a strong ease-out throws 87% of the swing into the first half
-       and then crawls, which reads as "fast, then dawdling" rather than slowly
-       opening. This stays close to an even sweep and just settles at the end. */
-    const easeOut = t => 1 - Math.pow(1 - t, 1.6);
-
     (function step(now) {
-      if (myToken !== scrollAnimToken) return;      // superseded by a newer click
-      const elapsed = now - startTime;
-      let p;
-      if (elapsed < OPEN_MS) {
-        const t = t0 + (1 - t0) * (elapsed / OPEN_MS);
-        p = pForLift(easeOut(clamp(t, 0, 1)));
-      } else {
-        p = lerp(zoomFrom, END_P, clamp((elapsed - OPEN_MS) / ZOOM_MS, 0, 1));
-      }
+      if (myToken !== scrollAnimToken) return;   // superseded by a newer click
+      const t = clamp((now - startTime) / duration, 0, 1);
+      const p = lerp(p0, END_P, t);
       window.scrollTo(0, trackTop + total * p);
-      if (elapsed < OPEN_MS + ZOOM_MS) requestAnimationFrame(step);
+      /* Drive the animation state synchronously - do not wait for scroll
+         events plus the smoothing lerp to catch up. */
+      target = current = readProgress();
+      apply(current);
+      headerState();
+      if (t < 1) requestAnimationFrame(step);
     })(startTime);
   }
 

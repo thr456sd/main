@@ -137,37 +137,27 @@ real packaging shots: both accept a `background-image` at 640x460.
 
 ## "Open the box" button
 
-A two-beat reveal driven by hand (`openBoxSequence()` in main.js), because
-`scrollTo({behavior:'smooth'})` has no duration control:
+One continuous motion at constant rate (`openBoxSequence()` in main.js), 2200ms from
+a standing start, landing at p=0.80. Progress is applied synchronously inside the
+sequence's own rAF loop - waiting for scroll events plus the smoothing lerp would
+add lag on top.
 
-| beat | duration | what moves |
-| --- | --- | --- |
-| lid opening | 1600ms | lid swings 0 -> 104 degrees |
-| zoom | 850ms | camera pushes into the tray |
+**The phases overlap now.** The lid (p 0.02-0.55) and the camera (p 0.08-0.86) are
+both LINEAR in scroll progress and run concurrently. They used to be sequential with
+an in-out ease on the lid, and every button fix kept failing the same way: for the
+whole first beat the camera never moved, so all a viewer saw was a small distant lid
+tilting - which reads as "nothing is happening" no matter how mathematically early
+the lid starts. Concurrency is what makes the click feel immediate; linearity is
+what keeps the pace consistent.
 
-**The key point: it animates the LID, not the scrollbar.** `apply()` runs the lid
-angle through `ease()`, a cubic in-out that is nearly flat at both ends - 20% into
-the lid's scroll range it has opened barely 3 of its 104 degrees, then it snaps.
-So pacing the *scroll* evenly does not open the *lid* evenly. `pForLift()` inverts
-that curve by binary search: give it how far open you want the lid, it returns the
-scroll progress that produces it. That lets the sequence put the lid on a chosen
-curve instead of inheriting the scrollbar's.
+By 250ms three things are visibly in motion: lid at 14deg, camera pushing in,
+headline fading. The lid sweeps at a steady ~72deg/s and finishes at ~1.5s while the
+camera glides on to 2.2s. The wall/lid fades start at p=0.56-0.58, after the lid
+completes - fading a lid that is still opening undercuts the reveal.
 
-The curve is ease-out with a deliberately low exponent (1.6). Ease-out so the lid is
-moving on the first frame - no ramp-in, no felt delay. Low exponent because a cubic
-ease-out throws ~87% of the swing into the first half then crawls, reading as "fast
-then dawdling" rather than slowly opening.
-
-Lid angle over time, before and after:
-
-| | 50ms | 100ms | 400ms | 800ms | 1200ms | 1600ms |
-| --- | --- | --- | --- | --- | --- | --- |
-| before | 0deg | 0deg | 7deg | 52deg | 98deg | 104deg |
-| after | 5deg | 10deg | 38deg | 70deg | 93deg | 104deg |
-
-`t0`/`zoomFrom` resume from wherever the lid already is, so clicking part-way
-through the hero never snaps it shut first. A token cancels a stale run on
-re-click. `prefers-reduced-motion` jumps straight to the end.
+Clicking part-way down the hero covers the remaining distance at the SAME rate
+(duration scales with distance), and a re-click cancels the stale run via token.
+`prefers-reduced-motion` jumps straight to the end.
 
 ## Mobile
 
