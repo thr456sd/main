@@ -398,29 +398,39 @@
     const total = heroTrack.offsetHeight - stage.offsetHeight;
     const trackTop = docTop(heroTrack) - topbarH();
     const p0 = Math.min(readProgress(), END_P);
+    /* The stylesheet sets html{scroll-behavior:smooth} for anchor links. Left
+       alone it also applies to OUR scrollTo calls: every frame would kick off a
+       fresh damped browser scroll chasing an already-moved target, so the page
+       crawls behind the loop and the box appears frozen for a second or more.
+       'instant' opts each call out; the inline override covers engines that do
+       not recognise it. Both are undone when the run ends or is cancelled. */
+    const prevBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
+    const done = () => { root.style.scrollBehavior = prevBehavior; };
     /* Same rate regardless of starting point: a click halfway down the hero
        covers half the distance in half the time, not the same time. */
     const duration = Math.max(1, SEQ_MS * (END_P - p0) / END_P);
     const startTime = performance.now();
 
     (function step(now) {
-      if (myToken !== scrollAnimToken) return;   // superseded by a newer click
+      if (myToken !== scrollAnimToken) { done(); return; }   // newer click won
       const t = clamp((now - startTime) / duration, 0, 1);
       const p = lerp(p0, END_P, t);
-      window.scrollTo(0, trackTop + total * p);
+      window.scrollTo({ top: trackTop + total * p, behavior: 'instant' });
       /* Drive the animation state synchronously - do not wait for scroll
          events plus the smoothing lerp to catch up. */
       target = current = readProgress();
       apply(current);
       headerState();
       if (t < 1) requestAnimationFrame(step);
+      else done();
     })(startTime);
   }
 
   $('#openBoxBtn').addEventListener('click', () => {
     const total = heroTrack.offsetHeight - stage.offsetHeight;
     if (reduced) {
-      window.scrollTo(0, docTop(heroTrack) - topbarH() + total * END_P);
+      window.scrollTo({ top: docTop(heroTrack) - topbarH() + total * END_P, behavior: 'instant' });
     } else {
       openBoxSequence();
     }

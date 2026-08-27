@@ -142,6 +142,18 @@ a standing start, landing at p=0.80. Progress is applied synchronously inside th
 sequence's own rAF loop - waiting for scroll events plus the smoothing lerp would
 add lag on top.
 
+**The scroll calls MUST opt out of `scroll-behavior: smooth`.** The stylesheet sets
+it on `html` for anchor links. Left alone it also applies to this loop's own
+`scrollTo` calls: each frame kicks off a fresh damped browser scroll chasing a target
+that has already moved, so the page crawls far behind the loop and the box looks
+frozen for a second or more after the click. The loop uses
+`scrollTo({behavior:'instant'})` plus an inline `scroll-behavior:auto` override for
+engines that do not recognise it, restored when the run ends or is cancelled.
+
+This bug hid for three attempts because every diagnostic probe began by setting
+`scrollBehavior='auto'` to make measurements deterministic - which silently disabled
+the exact thing that was broken. Verify scroll animations WITHOUT that override.
+
 **The phases overlap now.** The lid (p 0.02-0.55) and the camera (p 0.08-0.86) are
 both LINEAR in scroll progress and run concurrently. They used to be sequential with
 an in-out ease on the lid, and every button fix kept failing the same way: for the
