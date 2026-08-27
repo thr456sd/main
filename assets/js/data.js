@@ -35,7 +35,7 @@ const BALLS = [
   {
     id: 'prov1-green', brand: 'titleist', name: 'Pro V1', colour: 'Green', line: 'Tour',
     img: 'assets/img/prov1-green.png',
-    tagline: 'The same ball, easier to find.',
+    tagline: 'The most played ball in golf, just easier to find.',
     blurb: 'Identical construction and performance to the white Pro V1, finished in a high-visibility green that stands out against fairway and rough.',
     layers: '3-piece', compression: 87, cover: 'Cast Urethane Elastomer',
     feel: 'Soft', spin: 'Mid', launch: 'Mid', dimples: 388,
