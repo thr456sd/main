@@ -878,8 +878,9 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .hero__stage.is-open .hero__copy{ transform:translate(-50%,0) translateY(-26px); }
   .hero__sub{ margin-left:auto; margin-right:auto; }
   .hero__cta{ justify-content:center; }
-  .hero__explorehead{ left:50%; transform:translate(-50%,14px); text-align:center; top:96px; }
-  .hero__stage.is-open .hero__explorehead{ transform:translate(-50%,0); }
+  /* Removed on small screens: the box fills the stage once open, so this sat
+     directly on top of the ball grid and made both unreadable. */
+  .hero__explorehead{ display:none; }
 
   .ballcard{
     right:auto; left:50%; top:auto; bottom:18px;
@@ -943,7 +944,7 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 
 /* Short PORTRAIT phones (e.g. 320x568): the supporting paragraph is what tips
    the copy over the height budget, and it fades out by p=0.20 regardless. */
-@media (max-width:640px) and (max-height:620px){
+@media (max-width:640px) and (max-height:780px){
   .hero__sub{ display:none; }
   .hero__title{ font-size:clamp(25px,7.4vw,32px); margin-bottom:11px; }
   .hero__copy .eyebrow{ margin-bottom:8px; }

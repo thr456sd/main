@@ -150,6 +150,17 @@ below it - centring both, as desktop does vertically, stacked the headline direc
 on top of the box. Short landscape (`max-height:520px`) has no room to stack at any
 type size, so it returns to copy-left / box-right and drops the supporting paragraph.
 
+On the stacked layout the box's drop is MEASURED, not a fraction of the viewport
+(`measureStack()` in main.js). The copy's rendered height moves with viewport width,
+font loading and Safari's collapsing URL bar, so a fixed fraction put the lid on top
+of the buttons at ~660px tall while looking fine at 812. It measures the union of
+`#box` and `#lid` - the lid extends past the box's own border box - and centres the
+box in whatever space is left below the copy. Re-run on resize, on visualViewport
+resize, and after `document.fonts.ready`.
+
+The explorer heading (`.hero__explorehead`) is hidden below 1000px: once the box is
+open it fills the stage, so the heading sat directly on top of the ball grid.
+
 Watch out for circular custom properties in the box tokens: above 640px `--bw` is
 derived from `--bh`, so a media query defining `--bh` from `--bw` resolves to invalid
 and the box collapses to zero height. Derive from `vh` in those blocks.

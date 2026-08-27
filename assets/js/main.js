@@ -91,6 +91,40 @@
   const tray = $('#tray');
   const stage = $('#heroStage');
   const lidEl = $('#lid');
+  const boxEl = $('#box');
+  const heroCopy = $('#heroCopy');
+
+  /* Stacked layout = copy above, box below (portrait phones and tablets).
+     Short landscape puts them side by side instead and needs no clearance. */
+  const isStacked = () =>
+    window.matchMedia('(max-width:1000px)').matches &&
+    !window.matchMedia('(max-height:520px)').matches;
+
+  /* How far the box must drop to clear the copy. It depends on the copy's
+     RENDERED height, which moves with viewport width, font loading and Safari's
+     collapsing URL bar - a fixed fraction of the viewport gets this wrong on
+     real phones (the lid was landing on the buttons at ~660px tall). The lid
+     extends past the box's own box, so the union of the two is what matters. */
+  let stackedRise = 0;
+  function measureStack() {
+    if (!isStacked()) { stackedRise = 0; return; }
+    const prev = root.style.getPropertyValue('--rise');
+    root.style.setProperty('--rise', '0px');
+    const stageR = stage.getBoundingClientRect();
+    const boxR = boxEl.getBoundingClientRect();
+    const lidR = lidEl.getBoundingClientRect();
+    const top = Math.min(boxR.top, lidR.top) - stageR.top;
+    const bottom = Math.max(boxR.bottom, lidR.bottom) - stageR.top;
+    const copyBottom = heroCopy.getBoundingClientRect().bottom - stageR.top;
+    // Centre the box in the space left below the copy rather than just clearing
+    // it, so the whitespace above and below the box is balanced.
+    const stageH = stage.offsetHeight;
+    const region = stageH - copyBottom;
+    const desiredTop = copyBottom + Math.max(16, (region - (bottom - top)) / 2);
+    const room = stageH - bottom - 10;              // never push it off-screen
+    stackedRise = Math.max(0, Math.min(desiredTop - top, room));
+    root.style.setProperty('--rise', prev);
+  }
   const leader = $('#leader');
   const card = $('#ballcard');
   const cardEmpty = $('#ballcardEmpty');
@@ -273,8 +307,9 @@
     // box, so the tray ends up higher and never slides sideways -- the desktop
     // slide would push half the balls off a phone screen.
     const small = window.matchMedia('(max-width:1000px)').matches;
-    const endRise = small ? -0.12 : 0;
-    root.style.setProperty('--rise', (lerp(0.18, endRise, fly) * window.innerHeight).toFixed(1) + 'px');
+    const startRise = isStacked() ? stackedRise : 0.18 * window.innerHeight;
+    const endRise = (small ? -0.12 : 0) * window.innerHeight;
+    root.style.setProperty('--rise', lerp(startRise, endRise, fly).toFixed(1) + 'px');
     const tiltDeg = lerp(26, 4, fly);
     root.style.setProperty('--tilt', tiltDeg.toFixed(2) + 'deg');
     // The lid plane faces away once the box's tilt plus the lid's own opening
@@ -333,7 +368,9 @@
     if (window.scrollY !== lastY) { lastY = window.scrollY; onScroll(); }
     requestAnimationFrame(watchdog);
   })();
-  window.addEventListener('resize', () => { syncTopH(); onScroll(); drawLeader(); });
+  window.addEventListener('resize', () => { syncTopH(); measureStack(); onScroll(); drawLeader(); });
+  /* Safari changes innerHeight as the URL bar collapses; re-measure then too. */
+  if (window.visualViewport) visualViewport.addEventListener('resize', () => { measureStack(); onScroll(); });
 
   $('#openBoxBtn').addEventListener('click', () => {
     const total = heroTrack.offsetHeight - stage.offsetHeight;
@@ -522,6 +559,11 @@
   --------------------------------------------------------------- */
   $('#year').textContent = new Date().getFullYear();
   syncTopH();
+  measureStack();
+  /* Web fonts land after first paint and change the copy's height. */
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { measureStack(); onScroll(); });
+  }
   target = current = readProgress();   // no jump when the page loads part-scrolled
   apply(current);
   headerState();
