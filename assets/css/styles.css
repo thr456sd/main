@@ -866,8 +866,17 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .mega__feature{ display:none; }
 
   .hero__track{ height:320vh; }
-  .hero__copy{ left:50%; transform:translate(-50%,-50%); max-width:min(560px,86vw); text-align:center; }
-  .hero__stage.is-open .hero__copy{ transform:translate(-50%,-50%) translateY(-30px); }
+  /* Copy sits at the TOP of the stage with the box below it. Centring both -
+     which is what desktop does horizontally - stacked the headline directly on
+     top of the box on a phone. An explicit width also stops the block going
+     shrink-to-fit narrow, which was forcing extra line wraps and making it tall. */
+  .hero__copy{
+    left:50%; top:0; transform:translate(-50%,0);
+    width:min(88vw,520px); max-width:none; text-align:center;
+    padding-top:clamp(10px,2.4vh,26px);
+  }
+  .hero__stage.is-open .hero__copy{ transform:translate(-50%,0) translateY(-26px); }
+  .hero__sub{ margin-left:auto; margin-right:auto; }
   .hero__cta{ justify-content:center; }
   .hero__explorehead{ left:50%; transform:translate(-50%,14px); text-align:center; top:96px; }
   .hero__stage.is-open .hero__explorehead{ transform:translate(-50%,0); }
@@ -893,7 +902,13 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 }
 
 @media (max-width:640px){
-  :root{ --bw:min(86vw, 340px); --bh:calc(var(--bw) * 0.72); --bd:calc(var(--bw) * 0.2); --hpad:20px; }
+  :root{
+    --bw:min(86vw, 340px);
+    /* Capped by height as well: width alone made the box too tall to sit under
+       the copy on a short phone. */
+    --bh:min(calc(var(--bw) * 0.72), 32vh);
+    --bd:calc(var(--bw) * 0.2); --hpad:20px;
+  }
   .announce__track span:not(:first-child){ display:none; }
   .announce .dot{ display:none; }
   .header__inner{ height:60px; gap:8px; }
@@ -904,6 +919,14 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   /* Search and account move out of the cramped bar; cart stays. */
   .header__actions .iconbtn:not(.iconbtn--cart){ display:none; }
   .hero__track{ height:300vh; }
+  .hero__copy .eyebrow{ font-size:10px; margin-bottom:12px; }
+  .hero__title{ font-size:clamp(29px,8.4vw,38px); margin-bottom:13px; }
+  .hero__sub{ font-size:13.5px; line-height:1.5; margin-bottom:18px; }
+  /* Two compact buttons on one row rather than two full-height stacked ones. */
+  .hero__cta{ gap:10px; flex-wrap:nowrap; }
+  .hero__cta .btn{ flex:1 1 0; min-width:0; padding:14px 8px; font-size:9px; letter-spacing:.1em; }
+  /* Redundant beside "Open the box", and it was colliding with the CTAs. */
+  .hero__scroll{ display:none; }
   .grid,.cards3,.reviews__grid,.quote,.footer__grid{ grid-template-columns:1fr; }
   .builder__picker{ grid-template-columns:repeat(2,1fr); }
   .signup__form{ grid-template-columns:1fr; }
@@ -916,6 +939,40 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .lid__rule{ margin:8px auto; }
   .lid__sub{ font-size:7.5px; letter-spacing:.24em; }
   .lid__tag{ font-size:7px; margin-top:9px; }
+}
+
+/* Short PORTRAIT phones (e.g. 320x568): the supporting paragraph is what tips
+   the copy over the height budget, and it fades out by p=0.20 regardless. */
+@media (max-width:640px) and (max-height:620px){
+  .hero__sub{ display:none; }
+  .hero__title{ font-size:clamp(25px,7.4vw,32px); margin-bottom:11px; }
+  .hero__copy .eyebrow{ margin-bottom:8px; }
+  .hero__copy{ padding-top:8px; }
+}
+
+/* Short LANDSCAPE (e.g. 740x360): the stage is barely 200px tall, so stacking
+   cannot work at any type size. There is horizontal room instead, so go back to
+   copy-left / box-right the way desktop does it. */
+@media (max-width:1000px) and (max-height:520px){
+  /* Derive from height, never from --bw: above 640px --bw is itself derived
+     from --bh, and the circular reference resolves to invalid (box height 0). */
+  :root{
+    --bh:min(30vh, 200px);
+    --bw:calc(var(--bh) * 1.385);
+    --bd:calc(var(--bh) * 0.256);
+  }
+  .hero__copy{
+    left:var(--hpad); top:50%; transform:translateY(-50%);
+    width:min(44vw,330px); text-align:left; padding-top:0;
+  }
+  .hero__stage.is-open .hero__copy{ transform:translateY(-50%) translateX(-24px); }
+  .hero__sub{ display:none; }
+  .hero__title{ font-size:clamp(21px,4.2vw,30px); margin-bottom:9px; }
+  .hero__copy .eyebrow{ margin-bottom:7px; font-size:9px; }
+  .hero__cta{ justify-content:flex-start; flex-wrap:wrap; gap:8px; }
+  .hero__cta .btn{ flex:0 1 auto; padding:11px 14px; font-size:9px; }
+  .scene{ transform:translateX(25%); }
+  .ballcard{ max-height:70vh; }
 }
 
 @media (prefers-reduced-motion:reduce){

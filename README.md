@@ -144,6 +144,16 @@ burger + logo + cart. Tap targets are >=40px, form inputs are 16px (anything sma
 makes iOS Safari zoom the page on focus), heights use `dvh` where the collapsing
 Safari URL bar matters, and safe-area insets pad the top bar and footer.
 
+The hero has three layouts, not two. Desktop puts the copy left and slides the box
+right. Portrait phones/tablets put the copy at the TOP of the stage with the box
+below it - centring both, as desktop does vertically, stacked the headline directly
+on top of the box. Short landscape (`max-height:520px`) has no room to stack at any
+type size, so it returns to copy-left / box-right and drops the supporting paragraph.
+
+Watch out for circular custom properties in the box tokens: above 640px `--bw` is
+derived from `--bh`, so a media query defining `--bh` from `--bw` resolves to invalid
+and the box collapses to zero height. Derive from `vh` in those blocks.
+
 Scroll detection is quadruple-redundant (window, document capture, visualViewport,
 and a per-frame scrollY watchdog), and if animation frames stop being serviced -
 background tab, frozen compositor - `onScroll` lands the state directly instead of
