@@ -137,12 +137,27 @@ real packaging shots: both accept a `background-image` at 640x460.
 
 ## "Open the box" button
 
-`window.scrollTo({behavior:'smooth'})` has no duration control - browsers pick their
-own (fast) pace, and it was not the deliberate reveal the rest of the hero aims for.
-`smoothScrollTo()` in main.js drives the same `ease()` curve used by the scroll-driven
-box by hand, over 1800ms. A token guards a rapid double-click: a second click bumps
-the token and the first loop's `step()` sees it no longer matches and stops, so the
-two never fight over `scrollY`. `prefers-reduced-motion` still jumps straight there.
+`window.scrollTo({behavior:'smooth'})` has no duration control, so `smoothScrollTo()`
+in main.js drives it by hand over 1300ms.
+
+The curve is **linear, deliberately**. The box's phases are keyed to scroll progress,
+so the scroll curve decides how long each phase gets. An ease-in-out here spent
+~380ms barely moving before the lid started, then raced the middle. Measured against
+the real page geometry:
+
+| curve | motion starts | lid opening | zoom |
+| --- | --- | --- | --- |
+| ease-in-out @1800 | 380ms | 438ms | 965ms |
+| ease-in-out @1300 | 274ms | 317ms | 697ms |
+| **linear @1300** | **49ms** | **439ms** | **779ms** |
+
+Note the middle row: shortening the duration while keeping the ease makes the lid
+*faster*, not slower. Linear starts almost immediately and still gives the opening
+the same time the old 1800ms version did. The frame lerp in `frame()` supplies the
+ease-in and settle, so the input does not need its own.
+
+A token guards a rapid double-click: a second click bumps it and the first loop's
+`step()` stops. `prefers-reduced-motion` still jumps straight there.
 
 ## Mobile
 

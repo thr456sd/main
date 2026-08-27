@@ -385,7 +385,12 @@
     (function step(now) {
       if (myToken !== scrollAnimToken) return;   // superseded by a newer click
       const t = clamp((now - startTime) / duration, 0, 1);
-      window.scrollTo(0, startY + delta * ease(t));
+      /* LINEAR on purpose. An ease-in-out curve here spent ~380ms barely moving
+         before the lid even started, then raced the middle - the button felt
+         like it lagged and then skipped. Feeding progress in at a constant rate
+         starts the lid within ~50ms and gives the opening its full share of the
+         time. The frame lerp in frame() still eases the box in and settles it. */
+      window.scrollTo(0, startY + delta * t);
       if (t < 1) requestAnimationFrame(step);
     })(startTime);
   }
@@ -394,7 +399,7 @@
     const total = heroTrack.offsetHeight - stage.offsetHeight;
     const targetY = docTop(heroTrack) - topbarH() + total * 0.80;
     if (reduced) window.scrollTo(0, targetY);
-    else smoothScrollTo(targetY, 1800);
+    else smoothScrollTo(targetY, 1300);
   });
 
   /* ---------------------------------------------------------------
