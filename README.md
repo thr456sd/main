@@ -194,6 +194,24 @@ and the add button.
 | 375x660 | brand, name, specs, spin, price | no |
 | 320x568 | brand, name, specs, price | no |
 
+## Brand mark
+
+`assets/img/cc-logo.png` is the real CC shield, used by `.logo__mark` in both the
+header and the footer. Sourced from `Logo/CC Tees Logo/CCteestransparent.png` in the
+brand folder, cropped to its alpha bounding box (the original had ~40% transparent
+padding) and resized to 160px tall - about 4x the 30-38px it renders at, so it stays
+crisp on retina without gradient banding. It already had a genuine alpha channel, so
+no background removal was needed.
+
+The .ai/.pdf vectors in the brand folder are the better source if the mark ever needs
+to be larger, but converting them needs poppler/Inkscape, which is not installed here.
+The bundled `FreeSample-Vectorizer-io-*.svg` is NOT usable - it is a 2MB auto-trace of
+the dark-background render, 5,946 paths all filled black.
+
+Still using the old hand-drawn shield: the box lid (`.lid__mark`) and the favicon.
+Those are deliberate - the lid mark is line art tinted to look foil-stamped, and the
+favicon is an inline data-URI SVG.
+
 ## Mobile
 
 The page is built mobile-first below 1000px: the nav collapses to a drawer, the info
