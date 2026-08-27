@@ -196,36 +196,31 @@ and the add button.
 
 ## Brand mark
 
-Two colourways live in `assets/img/`, both sourced from the brand folder, cropped to
-their alpha bbox and resized to 160px tall (~4x the 30-38px they render at). Both had
-genuine alpha already, so no background removal was needed.
+The header and footer use the original hand-drawn shield: an inline `<svg>` tinted by
+`.logo__mark{ color:var(--gold) }` via `currentColor`. Keep that `color` declaration -
+without it the mark renders black.
 
-| file | shield | source |
+The box lid uses the real photographic mark, each face taking the opposite colourway
+so it always contrasts with its own stock:
+
+| file | shield | used on |
 | --- | --- | --- |
-| `cc-logo-navy.png` | navy body, gold linework | `CC Tees Logo/178710673593534237.png` |
-| `cc-logo-gold.png` | gold body, navy linework | `CC Tees Logo/CCteestransparent.png` |
+| `cc-logo-gold.png` | gold body, navy linework | lid exterior (navy) |
+| `cc-logo-navy.png` | navy body, gold linework | lid interior (gold) |
 
-**Header and footer use the gold one**, because the top bar is `--ink` (#101736) and
-the navy colourway does not survive there. Measured against that background:
+Both came from the brand folder (`CC Tees Logo/CCteestransparent.png` and
+`178710673593534237.png`), cropped to their alpha bbox and resized to 160px tall. Both
+already had genuine alpha - all edge pixels transparent, zero opaque near-white - so no
+background removal was needed.
 
-| element | contrast |
-| --- | --- |
-| navy shield body | 1.24:1 - effectively invisible |
-| gold linework | 8.81:1 - reads clearly |
-| club heads (92% dark navy) | blend into the bar |
+The lid interior is `rotateX(180deg)` viewed from behind, which double-mirrors it, so
+the mark reads upright there (verified, not assumed).
 
-With the navy mark only the gold outline, X and Cs read - the shield body and the two
-club heads at the bottom disappear into the bar. The gold colourway is the one built
-for dark backgrounds; the navy one belongs on light surfaces, which is exactly how the
-lid uses it. Switching is one filename in the two `.logo__mark` tags.
+If the photo mark is ever wanted in the bar, use the **gold** one: against `--ink`
+(#101736) the navy shield body measures 1.24:1 and its club heads are 92% dark navy,
+so they vanish into the bar.
 
-The box lid uses the real mark too, each face taking the opposite colourway so it
-always contrasts: **gold on the navy exterior, navy on the gold interior**. Because
-they are `<img>` now, `currentColor` no longer tints them - the colourway is picked
-per face in the markup. The interior face is `rotateX(180deg)` and viewed from behind,
-which double-mirrors it, so the mark reads upright there (verified, not assumed).
-
-Only the favicon still uses the drawn inline SVG - it is a data URI.
+The favicon is a separate inline data-URI SVG.
 
 ## Mobile
 

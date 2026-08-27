@@ -149,10 +149,7 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   height:76px; display:flex; align-items:center; gap:32px;
 }
 .logo{ display:flex; align-items:center; gap:12px; flex-shrink:0; padding:8px 0; }
-/* The brand mark is now an <img>, so width must be explicit-auto against the
-   fixed height and the old `color` (which drove the inline SVG's currentColor)
-   is gone. object-fit guards against the intrinsic ratio being overridden. */
-.logo__mark{ height:30px; width:auto; object-fit:contain; flex-shrink:0; display:block; }
+.logo__mark{ height:30px; width:auto; color:var(--gold); flex-shrink:0; }
 .logo__type{
   font-family:var(--sans); font-weight:600; font-size:15px;
   letter-spacing:.14em; text-transform:uppercase; line-height:1.1;
