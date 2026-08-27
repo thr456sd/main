@@ -372,12 +372,29 @@
   /* Safari changes innerHeight as the URL bar collapses; re-measure then too. */
   if (window.visualViewport) visualViewport.addEventListener('resize', () => { measureStack(); onScroll(); });
 
+  /* Native scrollTo({behavior:'smooth'}) has no duration control - the browser
+     picks its own (fast) pace. This drives it by hand so "Open the box" can be
+     paced deliberately instead of snapping to position. A token guards against
+     a second click starting a competing loop that fights the first for scrollY. */
+  let scrollAnimToken = 0;
+  function smoothScrollTo(targetY, duration) {
+    const myToken = ++scrollAnimToken;
+    const startY = window.scrollY;
+    const delta = targetY - startY;
+    const startTime = performance.now();
+    (function step(now) {
+      if (myToken !== scrollAnimToken) return;   // superseded by a newer click
+      const t = clamp((now - startTime) / duration, 0, 1);
+      window.scrollTo(0, startY + delta * ease(t));
+      if (t < 1) requestAnimationFrame(step);
+    })(startTime);
+  }
+
   $('#openBoxBtn').addEventListener('click', () => {
     const total = heroTrack.offsetHeight - stage.offsetHeight;
-    window.scrollTo({
-      top: docTop(heroTrack) - topbarH() + total * 0.80,
-      behavior: reduced ? 'auto' : 'smooth'
-    });
+    const targetY = docTop(heroTrack) - topbarH() + total * 0.80;
+    if (reduced) window.scrollTo(0, targetY);
+    else smoothScrollTo(targetY, 1800);
   });
 
   /* ---------------------------------------------------------------

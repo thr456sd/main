@@ -135,6 +135,15 @@ Product imagery is currently drawn in CSS — the `art--*` classes near the bott
 `art--*` rule. The lid faces in the hero (`.lid__top` and `.lid__in`) are the place to drop in your
 real packaging shots: both accept a `background-image` at 640x460.
 
+## "Open the box" button
+
+`window.scrollTo({behavior:'smooth'})` has no duration control - browsers pick their
+own (fast) pace, and it was not the deliberate reveal the rest of the hero aims for.
+`smoothScrollTo()` in main.js drives the same `ease()` curve used by the scroll-driven
+box by hand, over 1800ms. A token guards a rapid double-click: a second click bumps
+the token and the first loop's `step()` sees it no longer matches and stops, so the
+two never fight over `scrollY`. `prefers-reduced-motion` still jumps straight there.
+
 ## Mobile
 
 The page is built mobile-first below 1000px: the nav collapses to a drawer, the info
