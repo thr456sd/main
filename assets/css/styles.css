@@ -572,7 +572,9 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   background:rgba(246,244,239,.12); border:1px solid rgba(246,244,239,.12); margin-bottom:12px;
 }
 .bc__meta{ font-size:11px; letter-spacing:.03em; color:var(--muted-d); opacity:.85; margin:0 0 18px; }
-.bc__spec{ background:rgba(21,29,63,.92); padding:10px 12px; }
+/* margin:0 matters - .bc__spec is a <dl>, and the browser default margin:1em 0
+   was adding 32px to every grid row (rows were 85px for 53px of content). */
+.bc__spec{ background:rgba(21,29,63,.92); padding:10px 12px; margin:0; }
 .bc__spec dt{ font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted-d); margin-bottom:4px; }
 .bc__spec dd{ margin:0; font-size:14px; font-weight:400; }
 .bc__meter{ margin-bottom:20px; }
@@ -933,8 +935,23 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .signup__form{ grid-template-columns:1fr; }
   .story__panel--sm{ display:none; }
   .ribbonbox__tag{ right:0; bottom:8%; font-size:14px; padding:10px 16px; }
-  .bc__specs{ grid-template-columns:1fr; }
-  .ballcard{ max-height:40vh; }
+  /* Consolidated so the whole card is readable without scrolling. Content was
+     802px inside a 324px card - the single-column spec grid alone accounted for
+     380px of that. Two-up specs plus dropping the prose brings it under 330px.
+     What stays is what you compare balls on: brand, name, tagline, the four
+     specs, greenside spin, price and the add button. */
+  .bc__specs{ grid-template-columns:1fr 1fr; margin-bottom:10px; }
+  .bc__spec{ padding:8px 10px; }
+  .bc__spec dt{ font-size:8.5px; letter-spacing:.14em; margin-bottom:2px; }
+  .bc__spec dd{ font-size:13px; }
+  .bc__blurb, .bc__meta, .bc__best{ display:none; }
+  .ballcard{ max-height:46vh; padding:18px; }
+  .bc__brandrow{ margin-bottom:8px; }
+  .bc__name{ font-size:26px; margin-bottom:5px; }
+  .bc__tagline{ font-size:15px; margin-bottom:10px; }
+  .bc__meter{ margin-bottom:14px; }
+  .bc__price{ font-size:21px; }
+  .bc__add{ padding:12px 16px; }
   .lid__type{ font-size:17px; letter-spacing:.06em; }
   .lid__mark{ height:38px; margin-bottom:10px; }
   .lid__rule{ margin:8px auto; }
@@ -974,6 +991,19 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .hero__cta .btn{ flex:0 1 auto; padding:11px 14px; font-size:9px; }
   .scene{ transform:translateX(25%); }
   .ballcard{ max-height:70vh; }
+}
+
+/* The consolidated card is a fixed ~327px of content, but its 46vh cap shrinks
+   with the viewport - so on shorter phones drop the least data-bearing lines
+   rather than reintroducing a scrollbar. The tagline goes first (flavour), the
+   spin meter only on the smallest screens (it is the one remaining spin fact). */
+@media (max-width:640px) and (max-height:720px){
+  .ballcard{ max-height:50vh; }
+  .bc__tagline{ display:none; }
+  .bc__name{ margin-bottom:10px; }
+}
+@media (max-width:640px) and (max-height:650px){
+  .bc__meter{ display:none; }
 }
 
 @media (prefers-reduced-motion:reduce){

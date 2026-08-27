@@ -171,6 +171,29 @@ Clicking part-way down the hero covers the remaining distance at the SAME rate
 (duration scales with distance), and a re-click cancels the stale run via token.
 `prefers-reduced-motion` jumps straight to the end.
 
+## The ball card on mobile
+
+Tapping a ball shows the whole card without scrolling. It used to hold 802px of
+content in a 324px box - nearly 500px of hidden scroll. Two fixes:
+
+- `.bc__spec` is a `<dl>`, and the browser's default `margin:1em 0` was never
+  reset, adding 32px to every spec row (rows measured 85px for 53px of content).
+  Fixed in the base rule, so desktop got shorter too.
+- Below 640px the spec grid was `1fr`, stacking four specs into 380px. It is now
+  two-up, and the prose (`.bc__blurb`, `.bc__meta`, `.bc__best`) is dropped.
+
+Content is a fixed ~329px while the card's cap is a fraction of viewport height, so
+shorter phones shed the least data-bearing lines rather than reintroducing a
+scrollbar: the tagline below 720px tall, the spin meter below 650px. What always
+survives is what you actually compare balls on - brand, name, the four specs, price
+and the add button.
+
+| viewport | shows | scrolls |
+| --- | --- | --- |
+| 375x812 | brand, name, tagline, specs, spin, price | no |
+| 375x660 | brand, name, specs, spin, price | no |
+| 320x568 | brand, name, specs, price | no |
+
 ## Mobile
 
 The page is built mobile-first below 1000px: the nav collapses to a drawer, the info
