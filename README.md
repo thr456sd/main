@@ -196,21 +196,31 @@ and the add button.
 
 ## Brand mark
 
-`assets/img/cc-logo.png` is the real CC shield, used by `.logo__mark` in both the
-header and the footer. Sourced from `Logo/CC Tees Logo/CCteestransparent.png` in the
-brand folder, cropped to its alpha bounding box (the original had ~40% transparent
-padding) and resized to 160px tall - about 4x the 30-38px it renders at, so it stays
-crisp on retina without gradient banding. It already had a genuine alpha channel, so
-no background removal was needed.
+Two colourways live in `assets/img/`, both sourced from the brand folder, cropped to
+their alpha bbox and resized to 160px tall (~4x the 30-38px they render at). Both had
+genuine alpha already, so no background removal was needed.
 
-The .ai/.pdf vectors in the brand folder are the better source if the mark ever needs
-to be larger, but converting them needs poppler/Inkscape, which is not installed here.
-The bundled `FreeSample-Vectorizer-io-*.svg` is NOT usable - it is a 2MB auto-trace of
-the dark-background render, 5,946 paths all filled black.
+| file | shield | source |
+| --- | --- | --- |
+| `cc-logo-navy.png` | navy body, gold linework | `CC Tees Logo/178710673593534237.png` |
+| `cc-logo-gold.png` | gold body, navy linework | `CC Tees Logo/CCteestransparent.png` |
 
-Still using the old hand-drawn shield: the box lid (`.lid__mark`) and the favicon.
-Those are deliberate - the lid mark is line art tinted to look foil-stamped, and the
-favicon is an inline data-URI SVG.
+**Header and footer currently use the navy one, and it has a contrast problem worth
+knowing about.** The top bar is `--ink` (#101736). Measured against it:
+
+| element | contrast |
+| --- | --- |
+| navy shield body | 1.24:1 - effectively invisible |
+| gold linework | 8.81:1 - reads clearly |
+| club heads (92% dark navy) | blend into the bar |
+
+So the gold outline, X and Cs read while the shield body and the two club heads at the
+bottom disappear. The gold colourway is the one that survives a dark background
+(that shield body is the high-contrast part); the navy one belongs on light surfaces.
+Switching is one filename in the two `.logo__mark` tags.
+
+The box lid (`.lid__mark`) and the favicon still use the drawn inline SVG - the lid one
+is line art tinted to read as foil stamping.
 
 ## Mobile
 
