@@ -397,7 +397,10 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 .lid__in .lid__sub,.lid__in .lid__tag{ color:rgba(16,23,54,.74); }
 
 .lid__foil{ text-align:center; color:var(--gold-2); position:relative; z-index:2; padding:0 30px; }
-.lid__mark{ height:74px; width:auto; margin:0 auto 18px; display:block; }
+/* Real brand mark on both lid faces: gold on the navy exterior, navy on the
+   gold interior. They are <img> now, so currentColor no longer tints them -
+   the colourway is chosen per face in the markup instead. */
+.lid__mark{ height:74px; width:auto; object-fit:contain; margin:0 auto 18px; display:block; }
 .lid__type{
   display:block; font-family:var(--sans); font-weight:600;
   font-size:30px; letter-spacing:.1em; text-transform:uppercase;

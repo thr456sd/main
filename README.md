@@ -219,8 +219,13 @@ bottom disappear. The gold colourway is the one that survives a dark background
 (that shield body is the high-contrast part); the navy one belongs on light surfaces.
 Switching is one filename in the two `.logo__mark` tags.
 
-The box lid (`.lid__mark`) and the favicon still use the drawn inline SVG - the lid one
-is line art tinted to read as foil stamping.
+The box lid uses the real mark too, each face taking the opposite colourway so it
+always contrasts: **gold on the navy exterior, navy on the gold interior**. Because
+they are `<img>` now, `currentColor` no longer tints them - the colourway is picked
+per face in the markup. The interior face is `rotateX(180deg)` and viewed from behind,
+which double-mirrors it, so the mark reads upright there (verified, not assumed).
+
+Only the favicon still uses the drawn inline SVG - it is a data URI.
 
 ## Mobile
 
