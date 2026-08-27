@@ -205,8 +205,8 @@ genuine alpha already, so no background removal was needed.
 | `cc-logo-navy.png` | navy body, gold linework | `CC Tees Logo/178710673593534237.png` |
 | `cc-logo-gold.png` | gold body, navy linework | `CC Tees Logo/CCteestransparent.png` |
 
-**Header and footer currently use the navy one, and it has a contrast problem worth
-knowing about.** The top bar is `--ink` (#101736). Measured against it:
+**Header and footer use the gold one**, because the top bar is `--ink` (#101736) and
+the navy colourway does not survive there. Measured against that background:
 
 | element | contrast |
 | --- | --- |
@@ -214,10 +214,10 @@ knowing about.** The top bar is `--ink` (#101736). Measured against it:
 | gold linework | 8.81:1 - reads clearly |
 | club heads (92% dark navy) | blend into the bar |
 
-So the gold outline, X and Cs read while the shield body and the two club heads at the
-bottom disappear. The gold colourway is the one that survives a dark background
-(that shield body is the high-contrast part); the navy one belongs on light surfaces.
-Switching is one filename in the two `.logo__mark` tags.
+With the navy mark only the gold outline, X and Cs read - the shield body and the two
+club heads at the bottom disappear into the bar. The gold colourway is the one built
+for dark backgrounds; the navy one belongs on light surfaces, which is exactly how the
+lid uses it. Switching is one filename in the two `.logo__mark` tags.
 
 The box lid uses the real mark too, each face taking the opposite colourway so it
 always contrasts: **gold on the navy exterior, navy on the gold interior**. Because
