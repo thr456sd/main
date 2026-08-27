@@ -299,7 +299,10 @@
     if (activeIdx > -1) drawLeader();
   }
 
+  let lastFrameAt = 0;
+
   function frame() {
+    lastFrameAt = performance.now();
     current = reduced ? target : lerp(current, target, 0.14);
     if (Math.abs(target - current) < 0.0004) current = target;
     apply(current);
@@ -311,9 +314,25 @@
     target = readProgress();
     headerState();
     if (!ticking) { ticking = true; requestAnimationFrame(frame); }
+    // If animation frames are not being serviced (background tab, frozen
+    // compositor), skip the smoothing and land the state directly - a stuck
+    // hero is worse than an unsmoothed one.
+    if (performance.now() - lastFrameAt > 250) { current = target; apply(current); }
   }
 
+  /* Scroll can be reported different ways (window, an inner scroller caught at
+     document in the capture phase, or only the visual viewport on some mobile
+     browsers) - and some environments move scrollY without firing any of them.
+     Listen everywhere, and keep a one-comparison-per-frame watchdog as the
+     backstop so the hero can never freeze at p=0 while the page scrolls. */
   window.addEventListener('scroll', onScroll, { passive: true });
+  document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+  if (window.visualViewport) visualViewport.addEventListener('scroll', onScroll, { passive: true });
+  let lastY = -1;
+  (function watchdog() {
+    if (window.scrollY !== lastY) { lastY = window.scrollY; onScroll(); }
+    requestAnimationFrame(watchdog);
+  })();
   window.addEventListener('resize', () => { syncTopH(); onScroll(); drawLeader(); });
 
   $('#openBoxBtn').addEventListener('click', () => {

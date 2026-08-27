@@ -135,6 +135,22 @@ Product imagery is currently drawn in CSS — the `art--*` classes near the bott
 `art--*` rule. The lid faces in the hero (`.lid__top` and `.lid__in`) are the place to drop in your
 real packaging shots: both accept a `background-image` at 640x460.
 
+## Mobile
+
+The page is built mobile-first below 1000px: the nav collapses to a drawer, the info
+card becomes a bottom sheet, the box neither slides sideways nor drops (it would leave
+the screen), and search/account icons fold into the drawer below 640px, leaving
+burger + logo + cart. Tap targets are >=40px, form inputs are 16px (anything smaller
+makes iOS Safari zoom the page on focus), heights use `dvh` where the collapsing
+Safari URL bar matters, and safe-area insets pad the top bar and footer.
+
+Scroll detection is quadruple-redundant (window, document capture, visualViewport,
+and a per-frame scrollY watchdog), and if animation frames stop being serviced -
+background tab, frozen compositor - `onScroll` lands the state directly instead of
+waiting for a frame that may never come. Asset links in `index.html` carry a `?v=N`
+query: bump it whenever you edit CSS/JS, or browsers (and GitHub Pages' CDN) will
+serve the stale file.
+
 ## Wiring up commerce
 
 `main.js` keeps cart state in memory only — `bumpCart()`, the `dozen` array, and both form
