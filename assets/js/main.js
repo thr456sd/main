@@ -363,7 +363,7 @@
     if (!ticking) { ticking = true; requestAnimationFrame(frame); }
     // If animation frames are not being serviced (background tab, frozen
     // compositor), skip the smoothing and land the state directly - a stuck
-    // hero is worse than an unsmoothed one. Test 123
+    // hero is worse than an unsmoothed one. Test 12345
     if (performance.now() - lastFrameAt > 250) { current = target; apply(current); }
   }
 
