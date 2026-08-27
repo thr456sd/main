@@ -15,6 +15,10 @@
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* Scroll range over which the lid swings open. Shared so the "Open the box"
+     sequence and apply() can never drift out of sync. */
+  const LID_P0 = 0.03, LID_P1 = 0.30;
+
   /* ---------------------------------------------------------------
      Header state
   --------------------------------------------------------------- */
@@ -293,7 +297,7 @@
   }
 
   function apply(p) {
-    const lift  = ease(seg(p, 0.03, 0.30));                // lid swings up and out
+    const lift  = ease(seg(p, LID_P0, LID_P1));            // lid swings up and out
     const fly   = ease(seg(p, 0.32, 0.86));                // camera pushes in
     const drift = ease(seg(p, 0.40, 0.86));                // slide left for the card
 
@@ -372,34 +376,72 @@
   /* Safari changes innerHeight as the URL bar collapses; re-measure then too. */
   if (window.visualViewport) visualViewport.addEventListener('resize', () => { measureStack(); onScroll(); });
 
-  /* Native scrollTo({behavior:'smooth'}) has no duration control - the browser
-     picks its own (fast) pace. This drives it by hand so "Open the box" can be
-     paced deliberately instead of snapping to position. A token guards against
-     a second click starting a competing loop that fights the first for scrollY. */
+  /* "Open the box" is a two-beat reveal: the lid swings open slowly enough to
+     watch, then the camera pushes into the tray. Both beats are driven by hand
+     because scrollTo({behavior:'smooth'}) has no duration control. A token
+     cancels a stale run if the button is clicked again mid-animation. */
+  const OPEN_MS = 1600;   // the lid swinging open - the part worth watching
+  const ZOOM_MS = 850;    // camera pushing into the tray afterwards
+  const END_P   = 0.80;
   let scrollAnimToken = 0;
-  function smoothScrollTo(targetY, duration) {
+
+  /* apply() runs the lid angle through ease(), which is nearly flat at both
+     ends - 20% into its range the lid has opened barely 3 of its 104 degrees,
+     then it snaps. Driving scroll position evenly therefore does NOT open the
+     lid evenly. This inverts that curve: given how far open we want the lid,
+     it finds the scroll progress that produces it, so the sequence below can
+     put the LID on a chosen curve instead of the scrollbar. */
+  function pForLift(liftTarget) {
+    let lo = LID_P0, hi = LID_P1;
+    for (let i = 0; i < 32; i++) {
+      const mid = (lo + hi) / 2;
+      if (ease(seg(mid, LID_P0, LID_P1)) < liftTarget) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  function openBoxSequence() {
     const myToken = ++scrollAnimToken;
-    const startY = window.scrollY;
-    const delta = targetY - startY;
+    const total = heroTrack.offsetHeight - stage.offsetHeight;
+    const trackTop = docTop(heroTrack) - topbarH();
     const startTime = performance.now();
+
+    /* Resume from wherever the lid already is, so a click part-way through the
+       hero never snaps the lid shut before reopening it. */
+    const nowP = readProgress();
+    const fromLift = ease(seg(nowP, LID_P0, LID_P1));
+    const t0 = 1 - Math.cbrt(1 - Math.min(fromLift, 1));
+    const zoomFrom = Math.max(LID_P1, nowP);
+
+    /* Ease-OUT, not in-out, so the lid is already moving on the first frame -
+       no ramp-in, no felt delay. The exponent is deliberately low (1.6, not a
+       cubic 3): a strong ease-out throws 87% of the swing into the first half
+       and then crawls, which reads as "fast, then dawdling" rather than slowly
+       opening. This stays close to an even sweep and just settles at the end. */
+    const easeOut = t => 1 - Math.pow(1 - t, 1.6);
+
     (function step(now) {
-      if (myToken !== scrollAnimToken) return;   // superseded by a newer click
-      const t = clamp((now - startTime) / duration, 0, 1);
-      /* LINEAR on purpose. An ease-in-out curve here spent ~380ms barely moving
-         before the lid even started, then raced the middle - the button felt
-         like it lagged and then skipped. Feeding progress in at a constant rate
-         starts the lid within ~50ms and gives the opening its full share of the
-         time. The frame lerp in frame() still eases the box in and settles it. */
-      window.scrollTo(0, startY + delta * t);
-      if (t < 1) requestAnimationFrame(step);
+      if (myToken !== scrollAnimToken) return;      // superseded by a newer click
+      const elapsed = now - startTime;
+      let p;
+      if (elapsed < OPEN_MS) {
+        const t = t0 + (1 - t0) * (elapsed / OPEN_MS);
+        p = pForLift(easeOut(clamp(t, 0, 1)));
+      } else {
+        p = lerp(zoomFrom, END_P, clamp((elapsed - OPEN_MS) / ZOOM_MS, 0, 1));
+      }
+      window.scrollTo(0, trackTop + total * p);
+      if (elapsed < OPEN_MS + ZOOM_MS) requestAnimationFrame(step);
     })(startTime);
   }
 
   $('#openBoxBtn').addEventListener('click', () => {
     const total = heroTrack.offsetHeight - stage.offsetHeight;
-    const targetY = docTop(heroTrack) - topbarH() + total * 0.80;
-    if (reduced) window.scrollTo(0, targetY);
-    else smoothScrollTo(targetY, 1300);
+    if (reduced) {
+      window.scrollTo(0, docTop(heroTrack) - topbarH() + total * END_P);
+    } else {
+      openBoxSequence();
+    }
   });
 
   /* ---------------------------------------------------------------

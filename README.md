@@ -137,27 +137,37 @@ real packaging shots: both accept a `background-image` at 640x460.
 
 ## "Open the box" button
 
-`window.scrollTo({behavior:'smooth'})` has no duration control, so `smoothScrollTo()`
-in main.js drives it by hand over 1300ms.
+A two-beat reveal driven by hand (`openBoxSequence()` in main.js), because
+`scrollTo({behavior:'smooth'})` has no duration control:
 
-The curve is **linear, deliberately**. The box's phases are keyed to scroll progress,
-so the scroll curve decides how long each phase gets. An ease-in-out here spent
-~380ms barely moving before the lid started, then raced the middle. Measured against
-the real page geometry:
+| beat | duration | what moves |
+| --- | --- | --- |
+| lid opening | 1600ms | lid swings 0 -> 104 degrees |
+| zoom | 850ms | camera pushes into the tray |
 
-| curve | motion starts | lid opening | zoom |
-| --- | --- | --- | --- |
-| ease-in-out @1800 | 380ms | 438ms | 965ms |
-| ease-in-out @1300 | 274ms | 317ms | 697ms |
-| **linear @1300** | **49ms** | **439ms** | **779ms** |
+**The key point: it animates the LID, not the scrollbar.** `apply()` runs the lid
+angle through `ease()`, a cubic in-out that is nearly flat at both ends - 20% into
+the lid's scroll range it has opened barely 3 of its 104 degrees, then it snaps.
+So pacing the *scroll* evenly does not open the *lid* evenly. `pForLift()` inverts
+that curve by binary search: give it how far open you want the lid, it returns the
+scroll progress that produces it. That lets the sequence put the lid on a chosen
+curve instead of inheriting the scrollbar's.
 
-Note the middle row: shortening the duration while keeping the ease makes the lid
-*faster*, not slower. Linear starts almost immediately and still gives the opening
-the same time the old 1800ms version did. The frame lerp in `frame()` supplies the
-ease-in and settle, so the input does not need its own.
+The curve is ease-out with a deliberately low exponent (1.6). Ease-out so the lid is
+moving on the first frame - no ramp-in, no felt delay. Low exponent because a cubic
+ease-out throws ~87% of the swing into the first half then crawls, reading as "fast
+then dawdling" rather than slowly opening.
 
-A token guards a rapid double-click: a second click bumps it and the first loop's
-`step()` stops. `prefers-reduced-motion` still jumps straight there.
+Lid angle over time, before and after:
+
+| | 50ms | 100ms | 400ms | 800ms | 1200ms | 1600ms |
+| --- | --- | --- | --- | --- | --- | --- |
+| before | 0deg | 0deg | 7deg | 52deg | 98deg | 104deg |
+| after | 5deg | 10deg | 38deg | 70deg | 93deg | 104deg |
+
+`t0`/`zoomFrom` resume from wherever the lid already is, so clicking part-way
+through the hero never snaps it shut first. A token cancels a stale run on
+re-click. `prefers-reduced-motion` jumps straight to the end.
 
 ## Mobile
 
