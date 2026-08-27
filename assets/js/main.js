@@ -583,7 +583,9 @@
   /* ---------------------------------------------------------------
      Reveal on scroll
   --------------------------------------------------------------- */
-  $$('.sectionhead, .pcard, .pillars li, .card3, .story__art, .gifting__art, .reviews blockquote, .trust__grid > div, .quote, .signup__inner > *')
+  /* .reviews blockquote stays listed although the section is currently absent -
+     the quotes are coming back, and a selector matching nothing is harmless. */
+  $$('.sectionhead, .pcard, .card3, .gifting__art, .reviews blockquote, .trust__grid > div, .quote, .signup__inner > *')
     .forEach(el => el.classList.add('reveal'));
 
   const revealAll = () => $$('.reveal').forEach(el => el.classList.add('is-in'));
