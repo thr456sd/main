@@ -216,7 +216,14 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 
 /* ---------------------------- 4. Hero ---------------------------- */
 .hero{ position:relative; background:var(--ink); }
-.hero__track{ height:360vh; position:relative; }
+/* The track was 360vh of runway for a scroll-driven reveal. The reveal is on a
+   clock now, so this is exactly one stage tall - the same height pair as
+   .hero__stage below, so the sticky stage never travels. */
+.hero__track{
+  position:relative;
+  height:calc(100vh - var(--topH,116px));
+  height:calc(100dvh - var(--topH,116px));
+}
 .hero__stage{
   position:sticky; top:var(--topH,116px); height:calc(100vh - var(--topH,116px));
   height:calc(100dvh - var(--topH,116px)); /* iOS: track the collapsing URL bar */
@@ -258,16 +265,6 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 }
 .hero__explorehead h2{ font-size:clamp(26px,3vw,40px); }
 .hero__stage.is-open .hero__explorehead{ opacity:1; transform:translateY(0); }
-
-/* scroll cue */
-.hero__scroll{
-  position:absolute; left:50%; bottom:34px; transform:translateX(-50%);
-  display:flex; flex-direction:column; align-items:center; gap:12px; z-index:6;
-  font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted-d);
-  transition:opacity .4s; pointer-events:none;
-}
-.hero__scrollline{ width:1px; height:46px; background:linear-gradient(var(--gold), transparent); }
-.hero__stage.is-open .hero__scroll{ opacity:0; }
 
 /* ---- 3D scene ---- */
 .scene{
@@ -873,7 +870,6 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .mega__links a{ font-size:19px; }
   .mega__feature{ display:none; }
 
-  .hero__track{ height:320vh; }
   /* Copy sits at the TOP of the stage with the box below it. Centring both -
      which is what desktop does horizontally - stacked the headline directly on
      top of the box on a phone. An explicit width also stops the block going
@@ -927,15 +923,12 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .logo__type em{ font-size:6.5px; letter-spacing:.2em; }
   /* Search and account move out of the cramped bar; cart stays. */
   .header__actions .iconbtn:not(.iconbtn--cart){ display:none; }
-  .hero__track{ height:300vh; }
   .hero__copy .eyebrow{ font-size:10px; margin-bottom:12px; }
   .hero__title{ font-size:clamp(29px,8.4vw,38px); margin-bottom:13px; }
   .hero__sub{ font-size:13.5px; line-height:1.5; margin-bottom:18px; }
   /* Two compact buttons on one row rather than two full-height stacked ones. */
   .hero__cta{ gap:10px; flex-wrap:nowrap; }
   .hero__cta .btn{ flex:1 1 0; min-width:0; padding:14px 8px; font-size:9px; letter-spacing:.1em; }
-  /* Redundant beside "Open the box", and it was colliding with the CTAs. */
-  .hero__scroll{ display:none; }
   .grid,.cards3,.reviews__grid,.quote,.footer__grid{ grid-template-columns:1fr; }
   .builder__picker{ grid-template-columns:repeat(2,1fr); }
   .signup__form{ grid-template-columns:1fr; }
