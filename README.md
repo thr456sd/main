@@ -1,10 +1,10 @@
-# Clubhouse Co. — landing page
+# Fairway Provisions — landing page
 
-A static, dependency-free landing page for Clubhouse Co. No build step: open `index.html`
+A static, dependency-free landing page for Fairway Provisions. No build step: open `index.html`
 or serve the folder.
 
 ```bash
-python -m http.server 5173 --directory clubhouse-co
+python -m http.server 5173 --directory fairway-provisions
 ```
 
 ## Files
@@ -205,13 +205,19 @@ so it always contrasts with its own stock:
 
 | file | shield | used on |
 | --- | --- | --- |
-| `cc-logo-gold.png` | gold body, navy linework | lid exterior (navy) |
-| `cc-logo-navy.png` | navy body, gold linework | lid interior (gold) |
+| `fp-logo-gold.png` | gold body, navy linework | lid exterior (navy) |
+| `fp-logo-navy.png` | navy body, gold linework | lid interior (gold) |
 
-Both came from the brand folder (`CC Tees Logo/CCteestransparent.png` and
+Both started life as the Clubhouse Co. marks (`CC Tees Logo/CCteestransparent.png` and
 `178710673593534237.png`), cropped to their alpha bbox and resized to 160px tall. Both
 already had genuine alpha - all edge pixels transparent, zero opaque near-white - so no
 background removal was needed.
+
+For the Fairway Provisions rename the two `C` glyphs were replaced in place rather than
+the shield being redrawn: each letter box was rebuilt by interpolating the shield
+gradient across the row, then `F` and `P` were drawn back in Arial Bold condensed to
+19/27 - the width the original condensed `C` had at its 32px cap height - picking up the
+same per-row letter colour so the metallic gradient still runs through the type.
 
 The lid interior is `rotateX(180deg)` viewed from behind, which double-mirrors it, so
 the mark reads upright there (verified, not assumed).
