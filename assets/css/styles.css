@@ -304,7 +304,13 @@ ul,ol{ margin:0; padding:0; list-style:none; }
     repeating-linear-gradient(0deg, rgba(246,244,239,.03) 0 1px, transparent 1px 9px);
 }
 
-/* gold-printed interior walls */
+/* Gold-printed interior walls. Each hinges on one edge and swings up out of the
+   box's mid-plane, so on its own it would stand from z=0 to z=+bd - half a box
+   forward of where it belongs, poking through the closed lid. The floor is at
+   -bd/2 and the lid at +bd/2, so seat the hinge on the floor first and the wall
+   then spans exactly floor to opening. Without the translateZ the lining leaked
+   out around a shut box, by an amount that differed per side once the box was
+   tilted and spun - a chunky gold band on three edges and nothing on the left. */
 .box__wall{
   background:linear-gradient(180deg, #E4CE96, #C6A96C);
   border:1px solid rgba(16,23,54,.14);
@@ -312,22 +318,22 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 }
 .box__wall--top{
   width:var(--bw); height:var(--bd); left:0; top:0;
-  transform-origin:50% 0; transform:rotateX(90deg);
+  transform-origin:50% 0; transform:translateZ(calc(var(--bd) / -2)) rotateX(90deg);
   background:linear-gradient(180deg, #EBD7A6, #CDB279);
 }
 .box__wall--bottom{
   width:var(--bw); height:var(--bd); left:0; bottom:0;
-  transform-origin:50% 100%; transform:rotateX(-90deg);
+  transform-origin:50% 100%; transform:translateZ(calc(var(--bd) / -2)) rotateX(-90deg);
   background:linear-gradient(0deg, #EBD7A6, #CDB279);
 }
 .box__wall--left{
   width:var(--bd); height:var(--bh); left:0; top:0;
-  transform-origin:0 50%; transform:rotateY(-90deg);
+  transform-origin:0 50%; transform:translateZ(calc(var(--bd) / -2)) rotateY(-90deg);
   background:linear-gradient(90deg, #C6A96C, #E4CE96);
 }
 .box__wall--right{
   width:var(--bd); height:var(--bh); right:0; top:0;
-  transform-origin:100% 50%; transform:rotateY(90deg);
+  transform-origin:100% 50%; transform:translateZ(calc(var(--bd) / -2)) rotateY(90deg);
   background:linear-gradient(270deg, #C6A96C, #E4CE96);
 }
 
