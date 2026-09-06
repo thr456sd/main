@@ -378,6 +378,56 @@
 
   $('#openBoxBtn').addEventListener('click', openBox);
 
+  /* Scrubbing the reveal back out.
+
+     Opening no longer moves the page, so an open box sits at scrollY 0 with no
+     scroll position behind it to run backwards through - "scroll up" has to be
+     read as a gesture, not as a scroll offset. While the reveal is part-way or
+     fully out, the hero takes the wheel/touch delta and drives p directly:
+     up closes, down re-opens. It lets go at both ends - a closed box never
+     captures anything (only the button opens it, which is the whole point of
+     the click-to-open change) and a fully open one hands downward scrolling
+     back to the page so the reader can carry on to the collection. */
+  const SCRUB_PX = 900;              // gesture pixels for the full reveal
+
+  function scrubBy(deltaPx) {
+    animToken++;                     // a gesture cancels any running tween
+    current = clamp(current + deltaPx / SCRUB_PX, 0, END_P);
+    apply(current);
+  }
+
+  /* true when the hero still owns the viewport and there is something to undo */
+  function heroCanScrub(delta) {
+    if (window.scrollY > 2) return false;          // reader has moved on
+    if (current <= 0) return false;                // closed: nothing to reverse
+    if (current >= END_P && delta > 0) return false; // open: let the page go
+    return true;
+  }
+
+  window.addEventListener('wheel', e => {
+    if (!heroCanScrub(e.deltaY)) return;
+    e.preventDefault();
+    scrubBy(e.deltaY);
+  }, { passive: false });
+
+  /* Touch reports absolute positions, so turn them into the same signed delta
+     the wheel gives: dragging the finger DOWN (content moves down, y grows) is
+     an upward scroll, which is a negative delta. */
+  let touchY = null;
+  window.addEventListener('touchstart', e => {
+    touchY = e.touches.length === 1 ? e.touches[0].clientY : null;
+  }, { passive: true });
+  window.addEventListener('touchend', () => { touchY = null; }, { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (touchY === null) return;
+    const y = e.touches[0].clientY;
+    const delta = touchY - y;
+    if (!heroCanScrub(delta)) { touchY = y; return; }
+    e.preventDefault();
+    scrubBy(delta);
+    touchY = y;
+  }, { passive: false });
+
   /* "Variety Packs" and friends point at #explore, which used to be the far end
      of the scroll track - i.e. the same thing as a fully open box. With the
      track gone they have to ask for the reveal explicitly. */
