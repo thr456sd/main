@@ -1,5 +1,5 @@
 /* ==================================================================
-   Clubhouse Co.
+   Fairway Provisions
    Palette taken from the keepsake box: navy exterior, gold interior.
    1. Tokens
    2. Base
@@ -393,14 +393,18 @@ ul,ol{ margin:0; padding:0; list-style:none; }
 .lid__in .lid__rule{ background:rgba(16,23,54,.34); }
 .lid__in .lid__sub,.lid__in .lid__tag{ color:rgba(16,23,54,.74); }
 
-.lid__foil{ text-align:center; color:var(--gold-2); position:relative; z-index:2; padding:0 30px; }
+.lid__foil{ text-align:center; color:var(--gold-2); position:relative; z-index:2; padding:0 6%; }
 /* Real brand mark on both lid faces: gold on the navy exterior, navy on the
    gold interior. They are <img> now, so currentColor no longer tints them -
    the colourway is chosen per face in the markup instead. */
 .lid__mark{ height:74px; width:auto; object-fit:contain; margin:0 auto 18px; display:block; }
+/* "Fairway Provisions" is long enough to wrap at 30px once the box shrinks, and
+   the box is sized from --bh (viewport HEIGHT), so width breakpoints cannot catch
+   it. Derive the type from --bw instead and hold it on one line. */
 .lid__type{
   display:block; font-family:var(--sans); font-weight:600;
-  font-size:30px; letter-spacing:.1em; text-transform:uppercase;
+  font-size:clamp(8px, calc(var(--bw) * .048), 30px);
+  letter-spacing:.08em; white-space:nowrap; text-transform:uppercase;
   background:linear-gradient(100deg,#B9975B,#F0E1BA 45%,#B9975B);
   -webkit-background-clip:text; background-clip:text;
   color:transparent; -webkit-text-fill-color:transparent;
@@ -833,7 +837,6 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .bc__name{ font-size:29px; }
   .hero__copy{ max-width:min(440px,46vw); }
   .builder__picker{ grid-template-columns:repeat(3,1fr); }
-  .lid__type{ font-size:24px; }
   .lid__mark{ height:60px; margin-bottom:14px; }
 }
 
@@ -955,7 +958,6 @@ ul,ol{ margin:0; padding:0; list-style:none; }
   .bc__meter{ margin-bottom:14px; }
   .bc__price{ font-size:21px; }
   .bc__add{ padding:12px 16px; }
-  .lid__type{ font-size:17px; letter-spacing:.06em; }
   .lid__mark{ height:38px; margin-bottom:10px; }
   .lid__rule{ margin:8px auto; }
   .lid__sub{ font-size:7.5px; letter-spacing:.24em; }

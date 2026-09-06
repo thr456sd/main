@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------
-   Clubhouse Co - product data
+   Fairway Provisions - product data
 
    BALLS is listed in TRAY ORDER, which is column-major: entries 1-3 fill
    the first column top to bottom, 4-6 the second, and so on. The tray uses
@@ -157,7 +157,7 @@ const PRODUCTS = [
     id: 'tour-twelve',
     name: 'The Tour Twelve',
     kicker: 'Signature Variety Pack',
-    desc: 'Twelve tour balls from Titleist, Callaway, TaylorMade, Bridgestone and Srixon, presented in the Clubhouse keepsake box.',
+    desc: 'Twelve tour balls from Titleist, Callaway, TaylorMade, Bridgestone and Srixon, presented in the Fairway Provisions keepsake box.',
     price: 79, compare: 92, badge: 'Best Seller', art: 'box-navy'
   },
   {
@@ -171,7 +171,7 @@ const PRODUCTS = [
     id: 'greenskeeper',
     name: 'The Greenskeeper Set',
     kicker: 'Accessory Trio',
-    desc: 'Milled brass divot tool, magnetic ball marker and a waffle-weave caddie towel in Clubhouse navy.',
+    desc: 'Milled brass divot tool, magnetic ball marker and a waffle-weave caddie towel in Fairway navy.',
     price: 96, compare: null, badge: 'New', art: 'tools'
   },
   {
