@@ -15,19 +15,17 @@
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* Scroll range over which the lid swings open. Shared so the "Open the box"
-     sequence and apply() can never drift out of syncc. */
+  /* Range of p over which the lid swings open. Shared so the "Open the box"
+     sequence and apply() can never drift out of sync. */
   const LID_P0 = 0.02, LID_P1 = 0.55;
 
   /* ---------------------------------------------------------------
      Header state
   --------------------------------------------------------------- */
   const header = $('#header');
-  const heroTrack = $('#heroTrack');
   const topbar = $('#topbar');
   const root = document.documentElement;
 
-  const docTop = el => el.getBoundingClientRect().top + window.scrollY;
   const topbarH = () => (topbar ? topbar.offsetHeight : 0);
 
   /* The banner + header bar is always on screen, so the hero sits below it. */
@@ -285,24 +283,21 @@
   }
 
   /* ---------------------------------------------------------------
-     Scroll-driven box: open the lid, then fly into the tray
-  --------------------------------------------------------------- */
-  let target = 0, current = 0, ticking = false;
+     The box: open the lid, then fly into the tray
 
-  function readProgress() {
-    if (!heroTrack) return 0;
-    const total = heroTrack.offsetHeight - stage.offsetHeight;
-    if (total <= 0) return 0;
-    return clamp((topbarH() - heroTrack.getBoundingClientRect().top) / total, 0, 1);
-  }
+     p is pure animation state now. It used to be read back out of the scroll
+     position across a 360vh track, so the reveal played itself as you scrolled
+     past; nothing moves it but "Open the box", and the hero is one screen tall.
+  --------------------------------------------------------------- */
+  let current = 0;
 
   function apply(p) {
-    /* Lid and camera run CONCURRENTLY and LINEARLY in scroll progress. They
-       used to be sequential (lid 0.03-0.30, camera from 0.32) with an in-out
-       ease on the lid; after "Open the box" that meant 1.6s of a small distant
-       lid tilting while the camera sat still - which read as nothing happening.
-       Now the camera starts pushing in almost as soon as the lid starts moving,
-       and linear mapping keeps the pace consistent instead of flat-then-snap. */
+    /* Lid and camera run CONCURRENTLY and LINEARLY in p. They used to be
+       sequential (lid 0.03-0.30, camera from 0.32) with an in-out ease on the
+       lid; after "Open the box" that meant 1.6s of a small distant lid tilting
+       while the camera sat still - which read as nothing happening. Now the
+       camera starts pushing in almost as soon as the lid starts moving, and
+       linear mapping keeps the pace consistent instead of flat-then-snap. */
     const lift  = seg(p, LID_P0, LID_P1);                  // lid swings up and out
     const fly   = seg(p, 0.08, 0.86);                      // camera pushes in
     const drift = ease(seg(p, 0.40, 0.86));                // slide left for the card
@@ -346,95 +341,51 @@
     if (activeIdx > -1) drawLeader();
   }
 
-  let lastFrameAt = 0;
-
-  function frame() {
-    lastFrameAt = performance.now();
-    current = reduced ? target : lerp(current, target, 0.14);
-    if (Math.abs(target - current) < 0.0004) current = target;
-    apply(current);
-    if (Math.abs(target - current) > 0.0002) requestAnimationFrame(frame);
-    else ticking = false;
-  }
-
-  function onScroll() {
-    target = readProgress();
-    headerState();
-    if (!ticking) { ticking = true; requestAnimationFrame(frame); }
-    // If animation frames are not being serviced (background tab, frozen
-    // compositor), skip the smoothing and land the state directly - a stuck
-    // hero is worse than an unsmoothed one.
-    if (performance.now() - lastFrameAt > 250) { current = target; apply(current); }
-  }
-
-  /* Scroll can be reported different ways (window, an inner scroller caught at
-     document in the capture phase, or only the visual viewport on some mobile
-     browsers) - and some environments move scrollY without firing any of them.
-     Listen everywhere, and keep a one-comparison-per-frame watchdog as the
-     backstop so the hero can never freeze at p=0 while the page scrolls. */
-  window.addEventListener('scroll', onScroll, { passive: true });
-  document.addEventListener('scroll', onScroll, { passive: true, capture: true });
-  if (window.visualViewport) visualViewport.addEventListener('scroll', onScroll, { passive: true });
-  let lastY = -1;
-  (function watchdog() {
-    if (window.scrollY !== lastY) { lastY = window.scrollY; onScroll(); }
-    requestAnimationFrame(watchdog);
-  })();
-  window.addEventListener('resize', () => { syncTopH(); measureStack(); onScroll(); drawLeader(); });
+  /* Only the sticky header still cares about scrolling. */
+  window.addEventListener('scroll', headerState, { passive: true });
+  window.addEventListener('resize', () => { syncTopH(); measureStack(); apply(current); drawLeader(); });
   /* Safari changes innerHeight as the URL bar collapses; re-measure then too. */
-  if (window.visualViewport) visualViewport.addEventListener('resize', () => { measureStack(); onScroll(); });
+  if (window.visualViewport) visualViewport.addEventListener('resize', () => { measureStack(); apply(current); });
 
   /* "Open the box": one continuous motion at constant rate. The lid opens and
-     the camera pushes in together (the phases overlap in apply() now), so there
-     is visible motion from the very first frame - no beat where only a small
-     distant lid moves. Progress is applied DIRECTLY each frame rather than left
-     to the scroll listeners, whose smoothing lerp would add its own lag on top. */
+     the camera pushes in together (the phases overlap in apply()), so there is
+     visible motion from the very first frame - no beat where only a small
+     distant lid moves. This used to animate by scrolling the page down the
+     track and letting apply() follow; it is a plain clock-driven tween now, so
+     the page never moves under the reader. */
   const SEQ_MS = 2200;    // full reveal from a standing start
   const END_P  = 0.80;
-  let scrollAnimToken = 0;
+  let animToken = 0;
 
-  function openBoxSequence() {
-    const myToken = ++scrollAnimToken;
-    const total = heroTrack.offsetHeight - stage.offsetHeight;
-    const trackTop = docTop(heroTrack) - topbarH();
-    const p0 = Math.min(readProgress(), END_P);
-    /* The stylesheet sets html{scroll-behavior:smooth} for anchor links. Left
-       alone it also applies to OUR scrollTo calls: every frame would kick off a
-       fresh damped browser scroll chasing an already-moved target, so the page
-       crawls behind the loop and the box appears frozen for a second or more.
-       'instant' opts each call out; the inline override covers engines that do
-       not recognise it. Both are undone when the run ends or is cancelled. */
-    const prevBehavior = root.style.scrollBehavior;
-    root.style.scrollBehavior = 'auto';
-    const done = () => { root.style.scrollBehavior = prevBehavior; };
-    /* Same rate regardless of starting point: a click halfway down the hero
-       covers half the distance in half the time, not the same time. */
+  function openBox() {
+    if (current >= END_P - 0.001) return;      // already open
+    const myToken = ++animToken;
+    if (reduced) { current = END_P; apply(current); return; }
+    const p0 = current;
+    /* Same rate regardless of starting point, so a re-entrant call cannot slow
+       the remaining travel down. */
     const duration = Math.max(1, SEQ_MS * (END_P - p0) / END_P);
     const startTime = performance.now();
 
     (function step(now) {
-      if (myToken !== scrollAnimToken) { done(); return; }   // newer click won
+      if (myToken !== animToken) return;       // newer click won
       const t = clamp((now - startTime) / duration, 0, 1);
-      const p = lerp(p0, END_P, t);
-      window.scrollTo({ top: trackTop + total * p, behavior: 'instant' });
-      /* Drive the animation state synchronously - do not wait for scroll
-         events plus the smoothing lerp to catch up. */
-      target = current = readProgress();
+      current = lerp(p0, END_P, t);
       apply(current);
-      headerState();
       if (t < 1) requestAnimationFrame(step);
-      else done();
     })(startTime);
   }
 
-  $('#openBoxBtn').addEventListener('click', () => {
-    const total = heroTrack.offsetHeight - stage.offsetHeight;
-    if (reduced) {
-      window.scrollTo({ top: docTop(heroTrack) - topbarH() + total * END_P, behavior: 'instant' });
-    } else {
-      openBoxSequence();
-    }
-  });
+  $('#openBoxBtn').addEventListener('click', openBox);
+
+  /* "Variety Packs" and friends point at #explore, which used to be the far end
+     of the scroll track - i.e. the same thing as a fully open box. With the
+     track gone they have to ask for the reveal explicitly. */
+  $$('a[href="#explore"]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: reduced ? 'instant' : 'smooth' });
+    openBox();
+  }));
 
   /* ---------------------------------------------------------------
      Product grid
@@ -620,9 +571,8 @@
   measureStack();
   /* Web fonts land after first paint and change the copy's height. */
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => { measureStack(); onScroll(); });
+    document.fonts.ready.then(() => { measureStack(); apply(current); });
   }
-  target = current = readProgress();   // no jump when the page loads part-scrolled
-  apply(current);
+  apply(current);                      // always starts closed
   headerState();
 })();
